@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>재고·주문 시뮬레이터 | 김진경</title>
+<meta name="description" content="수요와 발주량을 넣으면 일별 재고와 스톡아웃 시점이 자동 계산되는 재고·주문 시뮬레이터. EOQ, 안전재고, 재주문점을 함께 계산합니다.">
+<meta name="theme-color" content="#f9f9f7">
+<meta property="og:type" content="website">
+<meta property="og:title" content="재고·주문 시뮬레이터 | 김진경">
+<meta property="og:description" content="EOQ·안전재고·재주문점 기반으로 일별 재고와 스톡아웃을 계산해 보는 도구">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a78d6'/%3E%3Cpath d='M7 22 L13 14 L18 18 L25 9' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme:light;
+    --plane:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --base:#c3c2b7; --border:rgba(11,11,11,.10);
+    --s1:#2a78d6; --s2:#eb6834; --crit:#d03b3b; --warn:#fab219;
+    --ease-out:cubic-bezier(0.23,1,0.32,1);
+    --radius:16px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      color-scheme:dark;
+      --plane:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --muted:#898781;
+      --grid:#2c2c2a; --base:#383835; --border:rgba(255,255,255,.10);
+      --s1:#3987e5; --s2:#d95926;
+    }
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Noto Sans KR',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--plane);color:var(--ink);line-height:1.7;-webkit-text-size-adjust:100%;word-break:keep-all;overflow-wrap:break-word}
+  a{color:inherit}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+  :focus-visible{outline:2px solid var(--s1);outline-offset:3px;border-radius:4px}
+  .skip{position:absolute;left:12px;top:-64px;background:var(--ink);color:var(--plane);padding:10px 16px;border-radius:8px;z-index:20;text-decoration:none}
+  .skip:focus{top:8px}
+
+  /* top bar */
+  .bar{border-bottom:1px solid var(--border);background:var(--plane)}
+  .bar .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
+  .bar a{display:inline-flex;align-items:center;min-height:44px;text-decoration:none;color:var(--ink2);font-size:14px}
+  .bar a:hover{color:var(--ink)}
+  .bar .name{font-weight:900;color:var(--ink);letter-spacing:-.02em}
+
+  /* head */
+  .head{padding:48px 0 28px}
+  .eyebrow{display:inline-block;font-size:13px;font-weight:700;color:var(--s1);background:color-mix(in srgb,var(--s1) 12%,transparent);padding:4px 12px;border-radius:999px;margin-bottom:16px}
+  h1{font-size:clamp(28px,6vw,44px);line-height:1.2;font-weight:900;letter-spacing:-.03em}
+  .lead{margin-top:14px;color:var(--ink2);max-width:660px;font-size:16.5px}
+  .note-sm{margin-top:10px;font-size:13.5px;color:var(--ink2)}
+
+  h2{font-size:20px;font-weight:900;letter-spacing:-.02em;margin:0 0 4px}
+  .sub{color:var(--ink2);font-size:14px;margin-bottom:16px}
+  section{padding:26px 0}
+
+  /* cards & fields */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+  .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .field label{display:block;font-size:13px;color:var(--ink2);margin-bottom:4px}
+  .field input,.field select{width:100%;min-height:44px;padding:0 12px;border:1px solid var(--border);border-radius:10px;background:var(--plane);color:var(--ink);font:inherit;font-size:15px}
+  .field input:focus-visible,.field select:focus-visible{outline-offset:1px}
+  .check{display:flex;align-items:center;gap:10px;min-height:44px;font-size:14px;color:var(--ink);cursor:pointer;margin-top:22px}
+  .check input{width:20px;height:20px;accent-color:var(--s1)}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .btn{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;font:inherit;font-weight:700;font-size:14px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;transition:transform 160ms var(--ease-out),background-color 160ms ease,color 160ms ease}
+  .btn.primary{background:var(--ink);color:var(--plane)}
+  @media (hover:hover) and (pointer:fine){
+    .btn:hover{transform:translateY(-1px)}
+    .btn:not(.primary):hover{background:var(--ink);color:var(--plane)}
+    .btn.primary:hover{background:var(--s1);border-color:var(--s1);color:#fff}
+  }
+  .btn:active{transform:scale(.97)}
+  .status{margin-top:12px;font-size:13px;color:var(--ink2)}
+
+  /* tiles */
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  .tile{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+  .tile .lab{font-size:13px;color:var(--ink2)}
+  .tile .val{font-size:clamp(22px,4vw,28px);font-weight:900;letter-spacing:-.02em;line-height:1.3;display:flex;align-items:center;gap:8px}
+  .tile .hint{font-size:12.5px;color:var(--ink2);line-height:1.5;margin-top:2px}
+  .dia{display:inline-block;width:10px;height:10px;transform:rotate(45deg);flex:none}
+  .dia.crit{background:var(--crit)}
+  .dia.warn{background:var(--warn)}
+
+  /* chart */
+  .legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px;color:var(--ink2);margin:2px 0 10px}
+  .legend span{display:inline-flex;align-items:center;gap:8px}
+  .key{display:inline-block;width:18px;height:0;border-top:2px solid}
+  .chartbox{position:relative;width:100%}
+  .chartbox svg{display:block;width:100%;height:auto;overflow:visible;touch-action:pan-y}
+  .chartbox svg:focus-visible{outline-offset:4px}
+  .g-grid{stroke:var(--grid);stroke-width:1}
+  .g-base{stroke:var(--base);stroke-width:1}
+  .tick{fill:var(--muted);font-size:11.5px;font-family:inherit}
+  .lab2{fill:var(--ink2);font-size:12px;font-family:inherit}
+  .l1{fill:none;stroke:var(--s1);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+  .a1{fill:var(--s1);opacity:.10}
+  .l2{fill:none;stroke:var(--s2);stroke-width:2;stroke-linecap:round}
+  .dot1{fill:var(--s1);stroke:var(--surface);stroke-width:2}
+  .stk{fill:var(--crit);stroke:var(--surface);stroke-width:2}
+  .cross{stroke:var(--base);stroke-width:1}
+  .tip{position:absolute;top:6px;min-width:178px;max-width:230px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px;font-size:13px;box-shadow:0 6px 24px rgba(0,0,0,.12);pointer-events:none;z-index:5}
+  .tip[hidden]{display:none}
+  .tip .t{font-weight:700;margin-bottom:6px;color:var(--ink)}
+  .tip .r{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:1px 0}
+  .tip .r .n{display:inline-flex;align-items:center;gap:8px;color:var(--ink2)}
+  .tip .r b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+  .tip .kk{display:inline-block;width:12px;height:0;border-top:2px solid}
+  .tip .dd{display:inline-block;width:8px;height:8px;transform:rotate(45deg);background:var(--crit);margin:0 2px}
+  .tip .sp{display:inline-block;width:12px}
+
+  /* table */
+  .tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:760px;font-size:13.5px;font-variant-numeric:tabular-nums}
+  th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+  th{font-size:12.5px;font-weight:700;color:var(--ink2);background:var(--surface);position:sticky;top:0}
+  tr:last-child td{border-bottom:0}
+  th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--surface);z-index:1}
+  td.st{text-align:left}
+  .stl{display:inline-flex;align-items:center;gap:8px}
+  td input{width:78px;min-height:40px;padding:0 8px;text-align:right;border:1px solid var(--border);border-radius:8px;background:var(--plane);color:var(--ink);font:inherit;font-size:13.5px;font-variant-numeric:tabular-nums}
+  td input:focus-visible{outline-offset:1px}
+
+  .assump{list-style:none;font-size:14px;color:var(--ink2)}
+  .assump li{padding:5px 0 5px 16px;position:relative}
+  .assump li::before{content:"";position:absolute;left:0;top:15px;width:6px;height:6px;border-radius:50%;background:var(--base)}
+  footer{padding:20px 0 56px;font-size:13px;color:var(--ink2);text-align:center}
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .btn{transition:none}
+  }
+  .only-m{display:none}
+  @media (max-width:760px){.only-m{display:inline}}
+  @media (max-width:640px){
+    .head{padding:32px 0 20px}
+    .card{padding:16px}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#sim">본문으로 건너뛰기</a>
+
+<div class="bar">
+  <div class="wrap">
+    <a class="name" href="./">김진경</a>
+    <a href="./">← 포트폴리오로 돌아가기</a>
+  </div>
+</div>
+
+<header class="head">
+  <div class="wrap">
+    <span class="eyebrow">생산·재고관리 도구</span>
+    <h1>재고·주문 시뮬레이터</h1>
+    <p class="lead">수요와 발주량을 넣으면 일별 재고와 스톡아웃 시점이 자동으로 계산됩니다. IOG 공모전에서 쓴 엑셀 재고관리표를 웹으로 옮겼습니다.</p>
+    <p class="note-sm">화면의 수요 값은 예시이며 대회 실제 데이터가 아닙니다. 입력한 값은 이 브라우저 안에서만 계산되고 어디로도 전송되지 않습니다.</p>
+  </div>
+</header>
+
+<main id="sim">
+<section>
+  <div class="wrap">
+    <h2>설정</h2>
+    <p class="sub">값을 바꾸면 아래 결과가 바로 갱신됩니다.</p>
+    <div class="card">
+      <div class="fields">
+        <div class="field"><label for="f-N">기간 (일)</label><input id="f-N" type="number" inputmode="numeric" min="7" max="60" step="1"></div>
+        <div class="field"><label for="f-start">시작 요일</label>
+          <select id="f-start">
+            <option value="0">월요일</option><option value="1">화요일</option><option value="2">수요일</option><option value="3">목요일</option><option value="4">금요일</option><option value="5">토요일</option><option value="6">일요일</option>
+          </select></div>
+        <div class="field"><label for="f-mean">일평균 수요 (개)</label><input id="f-mean" type="number" inputmode="numeric" min="1" max="10000" step="1"></div>
+        <div class="field"><label for="f-vari">수요 변동폭 (±%)</label><input id="f-vari" type="number" inputmode="numeric" min="0" max="90" step="5"></div>
+        <div class="field"><label for="f-init">초기 재고 (개)</label><input id="f-init" type="number" inputmode="numeric" min="0" max="1000000" step="10"></div>
+        <div class="field"><label for="f-L">리드타임 (일)</label><input id="f-L" type="number" inputmode="numeric" min="1" max="14" step="1"></div>
+        <div class="field"><label for="f-ss">안전재고 (일치 수요)</label><input id="f-ss" type="number" inputmode="decimal" min="0" max="10" step="0.5"></div>
+        <div class="field"><label for="f-S">1회 주문비 (원)</label><input id="f-S" type="number" inputmode="numeric" min="0" max="100000000" step="1000"></div>
+        <div class="field"><label for="f-h">개당 일 재고비 (원)</label><input id="f-h" type="number" inputmode="decimal" min="0.1" max="100000" step="1"></div>
+        <label class="check"><input id="f-wk" type="checkbox"> 주말 수요 없음</label>
+      </div>
+      <div class="actions">
+        <button class="btn" id="b-demand" type="button">예시 수요 다시 생성</button>
+        <button class="btn primary" id="b-policy" type="button">재주문점 정책으로 발주 채우기</button>
+        <button class="btn" id="b-clear" type="button">발주 모두 지우기</button>
+        <button class="btn" id="b-reset" type="button">초기화</button>
+      </div>
+      <p class="status" id="status" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>권장값</h2>
+    <p class="sub">입력한 일평균 수요와 비용 기준으로 계산한 값입니다.</p>
+    <div class="tiles" id="rec"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>결과</h2>
+    <p class="sub">아래 표의 수요와 발주량을 직접 고치면 결과도 함께 바뀝니다.</p>
+    <div class="tiles" id="res"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>재고 추이</h2>
+    <p class="sub">세로축은 기말 재고(개), 가로축은 일차입니다. 차트를 누르거나 방향키로 옮기면 값이 보입니다.</p>
+    <div class="card">
+      <div class="legend" aria-hidden="false">
+        <span><i class="key" style="border-color:var(--s1)"></i>기말 재고</span>
+        <span><i class="key" style="border-color:var(--s2)"></i><span id="lg-safety">안전재고</span></span>
+        <span><i class="dia crit"></i>스톡아웃 (수요를 채우지 못한 날)</span>
+      </div>
+      <div class="chartbox" id="chartbox">
+        <div class="tip" id="tip" hidden></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>일별 표</h2>
+    <p class="sub">수요와 발주량 칸은 직접 고칠 수 있습니다. 차트와 같은 값을 표로 보여 줍니다.<span class="only-m"> 표를 옆으로 밀면 입고, 재고, 상태가 보입니다.</span></p>
+    <div class="tablewrap">
+      <table id="tbl">
+        <caption class="sr" style="position:absolute;left:-9999px">일별 수요, 발주, 입고, 재고 계산표</caption>
+        <thead><tr><th scope="col">일차</th><th scope="col">수요</th><th scope="col">발주</th><th scope="col">입고</th><th scope="col">기초 재고</th><th scope="col">기말 재고</th><th scope="col">부족</th><th scope="col" style="text-align:left">상태</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>계산 방식과 가정</h2>
+    <div class="card">
+      <ul class="assump">
+        <li>발주는 해당 일차 시작에 이루어지고, 리드타임이 지난 날 시작 시점에 입고됩니다.</li>
+        <li>재고가 모자라 채우지 못한 수요는 다음 날로 넘기지 않고 판매 손실로 처리합니다.</li>
+        <li>EOQ = √(2 × 일평균 수요 × 1회 주문비 ÷ 개당 일 재고비)</li>
+        <li>안전재고 = 일평균 수요 × 안전재고 일수, 재주문점 = 일평균 수요 × 리드타임 + 안전재고</li>
+        <li>재주문점 정책: 일차 시작 시점의 재고(이동 중인 발주 포함)가 재주문점 이하이면 EOQ만큼 발주합니다. 기간 끝에 입고되지 않는 발주는 하지 않습니다.</li>
+        <li>재고비는 매일의 기말 재고에 개당 일 재고비를 곱해 합산하고, 주문비는 발주 횟수에 1회 주문비를 곱해 합산합니다.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap">© 2026 김진경 · 재고·주문 시뮬레이터</div></footer>
+
+<noscript><p style="padding:20px;text-align:center">이 도구는 JavaScript가 켜져 있어야 동작합니다.</p></noscript>
+
+<script>
+/*SIM-START*/
+function derive(p){
+  const mean=p.mean, h=Math.max(0.1,p.h);
+  const safety=Math.round(mean*p.ssDays);
+  const rop=Math.round(mean*p.L+safety);
+  const eoq=(mean>0)?Math.max(1,Math.ceil(Math.sqrt(2*mean*p.S/h))):0;
+  return {safety:safety, rop:rop, eoq:eoq};
+}
+function simulate(p, demand, orders){
+  const N=demand.length, rows=[];
+  let end=p.init, stockDays=0, short=0, totalDemand=0, hold=0, orderCost=0, firstStock=null, sumEnd=0;
+  for(let t=0;t<N;t++){
+    const begin=end;
+    const receipt=(t-p.L>=0)?(orders[t-p.L]||0):0;
+    const avail=begin+receipt;
+    const d=demand[t]||0;
+    const shipped=Math.min(avail,d);
+    const lack=d-shipped;
+    end=avail-shipped;
+    const ord=orders[t]||0;
+    if(lack>0){stockDays++; if(firstStock===null) firstStock=t+1;}
+    short+=lack; totalDemand+=d; hold+=end*p.h; sumEnd+=end;
+    if(ord>0) orderCost+=p.S;
+    rows.push({day:t+1,demand:d,order:ord,receipt:receipt,begin:begin,end:end,lack:lack,below:(lack===0&&end<p.safety)});
+  }
+  return {
+    rows:rows, stockDays:stockDays, firstStock:firstStock, short:short, totalDemand:totalDemand,
+    service:(totalDemand>0)?(1-short/totalDemand):1,
+    avgEnd:(N>0)?sumEnd/N:0, hold:hold, orderCost:orderCost, total:hold+orderCost
+  };
+}
+function policyOrders(p, demand){
+  const N=demand.length, orders=new Array(N).fill(0);
+  let end=p.init;
+  for(let t=0;t<N;t++){
+    const receipt=(t-p.L>=0)?orders[t-p.L]:0;
+    const after=end+receipt;
+    let transit=0;
+    for(let i=Math.max(0,t-p.L+1);i<t;i++) transit+=orders[i];
+    if(p.eoq>0 && after+transit<=p.rop && t+p.L<N) orders[t]=p.eoq;
+    end=after-Math.min(after,demand[t]||0);
+  }
+  return orders;
+}
+/*SIM-END*/
+
+(function(){
+  var DOW=['월','화','수','목','금','토','일'];
+  var DEFAULTS={N:28,start:0,mean:100,vari:30,init:300,L:2,ssDays:1,S:30000,h:10,noWeekend:false};
+  var st={p:Object.assign({},DEFAULTS),demand:[],orders:[],seed:20,demandEdited:false,ordersEdited:false,sel:null,sim:null};
+  var $=function(id){return document.getElementById(id)};
+  var fmt=function(n){return Math.round(n).toLocaleString('ko-KR')};
+  var NS='http://www.w3.org/2000/svg';
+
+  function clamp(v,lo,hi,def){v=Number(v); if(!isFinite(v)) return def; return Math.min(hi,Math.max(lo,v));}
+  function rng(seed){var a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+
+  function readParams(){
+    var p=st.p;
+    p.N=Math.round(clamp($('f-N').value,7,60,DEFAULTS.N));
+    p.start=Math.round(clamp($('f-start').value,0,6,0));
+    p.mean=Math.round(clamp($('f-mean').value,1,10000,DEFAULTS.mean));
+    p.vari=clamp($('f-vari').value,0,90,DEFAULTS.vari);
+    p.init=Math.round(clamp($('f-init').value,0,1000000,DEFAULTS.init));
+    p.L=Math.round(clamp($('f-L').value,1,14,DEFAULTS.L));
+    p.ssDays=clamp($('f-ss').value,0,10,DEFAULTS.ssDays);
+    p.S=Math.round(clamp($('f-S').value,0,100000000,DEFAULTS.S));
+    p.h=clamp($('f-h').value,0.1,100000,DEFAULTS.h);
+    p.noWeekend=$('f-wk').checked;
+    var d=derive(p); p.safety=d.safety; p.rop=d.rop; p.eoq=d.eoq;
+  }
+  function writeParams(){
+    var p=st.p;
+    $('f-N').value=p.N; $('f-start').value=p.start; $('f-mean').value=p.mean; $('f-vari').value=p.vari;
+    $('f-init').value=p.init; $('f-L').value=p.L; $('f-ss').value=p.ssDays; $('f-S').value=p.S; $('f-h').value=p.h;
+    $('f-wk').checked=p.noWeekend;
+  }
+  function genDemand(){
+    var p=st.p, r=rng(st.seed*7919+p.N), out=[];
+    for(var t=0;t<p.N;t++){
+      var dow=(p.start+t)%7;
+      if(p.noWeekend && dow>=5){out.push(0);continue;}
+      var v=Math.round(p.mean*(1+(p.vari/100)*(r()*2-1)));
+      out.push(Math.max(0,v));
+    }
+    st.demand=out;
+  }
+  function fitArrays(){
+    var N=st.p.N;
+    while(st.demand.length<N) st.demand.push(st.p.mean);
+    st.demand.length=N;
+    while(st.orders.length<N) st.orders.push(0);
+    st.orders.length=N;
+  }
+  function applyPolicy(){st.orders=policyOrders(st.p,st.demand);}
+
+  function recompute(){
+    readParams(); fitArrays();
+    if(!st.demandEdited) genDemand();
+    if(!st.ordersEdited) applyPolicy();
+    buildTable(); refresh();
+  }
+
+  /* ---------- table ---------- */
+  function mkInput(kind,i,val){
+    var inp=document.createElement('input');
+    inp.type='number'; inp.inputMode='numeric'; inp.min='0'; inp.max='99999'; inp.step='1';
+    inp.value=val; inp.dataset.kind=kind; inp.dataset.i=i;
+    inp.setAttribute('aria-label',(i+1)+'일차 '+(kind==='d'?'수요':'발주량'));
+    inp.addEventListener('input',onCell);
+    return inp;
+  }
+  function buildTable(){
+    var tb=$('tbody'); tb.textContent='';
+    for(var i=0;i<st.p.N;i++){
+      var tr=document.createElement('tr');
+      var c0=document.createElement('td'); c0.textContent=(i+1)+' ('+DOW[(st.p.start+i)%7]+')'; tr.appendChild(c0);
+      var c1=document.createElement('td'); c1.appendChild(mkInput('d',i,st.demand[i])); tr.appendChild(c1);
+      var c2=document.createElement('td'); c2.appendChild(mkInput('o',i,st.orders[i])); tr.appendChild(c2);
+      for(var k=0;k<4;k++){var c=document.createElement('td'); c.className='c'+k; tr.appendChild(c);}
+      var cs=document.createElement('td'); cs.className='st'; tr.appendChild(cs);
+      tb.appendChild(tr);
+    }
+  }
+  function onCell(e){
+    var el=e.target, i=Number(el.dataset.i);
+    var v=Math.max(0,Math.round(Number(el.value)||0));
+    if(el.dataset.kind==='d'){st.demand[i]=v; st.demandEdited=true; if(!st.ordersEdited) applyPolicy();}
+    else{st.orders[i]=v; st.ordersEdited=true;}
+    refresh();
+  }
+  function syncInputs(){
+    var ins=$('tbody').querySelectorAll('input');
+    for(var k=0;k<ins.length;k++){
+      var el=ins[k]; if(el===document.activeElement) continue;
+      var i=Number(el.dataset.i), v=(el.dataset.kind==='d')?st.demand[i]:st.orders[i];
+      if(String(v)!==el.value) el.value=v;
+    }
+  }
+  function fillRows(sim){
+    var trs=$('tbody').rows;
+    for(var i=0;i<sim.rows.length;i++){
+      var r=sim.rows[i], tr=trs[i]; if(!tr) continue;
+      tr.cells[3].textContent=fmt(r.receipt);
+      tr.cells[4].textContent=fmt(r.begin);
+      tr.cells[5].textContent=fmt(r.end);
+      tr.cells[6].textContent=r.lack>0?fmt(r.lack):'0';
+      var s=tr.cells[7]; s.textContent='';
+      var wrap=document.createElement('span'); wrap.className='stl';
+      if(r.lack>0){var d=document.createElement('i'); d.className='dia crit'; wrap.appendChild(d); wrap.appendChild(document.createTextNode('스톡아웃'));}
+      else if(r.below){var d2=document.createElement('i'); d2.className='dia warn'; wrap.appendChild(d2); wrap.appendChild(document.createTextNode('안전재고 미달'));}
+      else{wrap.appendChild(document.createTextNode('정상'));}
+      s.appendChild(wrap);
+    }
+  }
+
+  /* ---------- tiles ---------- */
+  function tile(parent,lab,val,hint,icon){
+    var d=document.createElement('div'); d.className='tile';
+    var a=document.createElement('div'); a.className='lab'; a.textContent=lab;
+    var b=document.createElement('div'); b.className='val';
+    if(icon){var i=document.createElement('i'); i.className='dia '+icon; b.appendChild(i);}
+    var vs=document.createElement('span'); vs.textContent=val; b.appendChild(vs);
+    var c=document.createElement('div'); c.className='hint'; c.textContent=hint;
+    d.appendChild(a); d.appendChild(b); d.appendChild(c); parent.appendChild(d);
+  }
+  function renderTiles(sim){
+    var p=st.p, rec=$('rec'), res=$('res'); rec.textContent=''; res.textContent='';
+    tile(rec,'경제적 주문량 (EOQ)',fmt(p.eoq)+'개','주문비와 재고비의 합이 가장 작은 1회 주문량');
+    tile(rec,'안전재고',fmt(p.safety)+'개','일평균 수요 × '+p.ssDays+'일');
+    tile(rec,'재주문점',fmt(p.rop)+'개','재고가 이 값 이하가 되면 발주');
+    tile(res,'스톡아웃',sim.stockDays+'일',sim.firstStock?('최초 '+sim.firstStock+'일차, 부족 합계 '+fmt(sim.short)+'개'):'기간 내 발생 없음',sim.stockDays>0?'crit':null);
+    tile(res,'수요 충족률',(sim.service*100).toFixed(1)+'%','전체 수요 '+fmt(sim.totalDemand)+'개 중 충족한 비율');
+    tile(res,'평균 재고',fmt(sim.avgEnd)+'개','일별 기말 재고의 평균');
+    tile(res,'총 비용',fmt(sim.total)+'원','재고비 '+fmt(sim.hold)+'원 + 주문비 '+fmt(sim.orderCost)+'원');
+  }
+
+  /* ---------- chart ---------- */
+  function niceStep(raw){var e=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/e;return(f<=1?1:f<=2?2:f<=5?5:10)*e;}
+  function mk(tag,attrs,parent){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+  var geo=null;
+  function renderChart(){
+    var box=$('chartbox'), sim=st.sim, rows=sim.rows, N=rows.length;
+    var old=box.querySelector('svg');
+    var hadFocus=!!old&&document.activeElement===old, keepSel=st.sel;
+    if(old) old.remove();
+    var W=Math.max(280,box.clientWidth), H=320, ml=48, mr=22, mt=14, mb=34;
+    var pw=W-ml-mr, ph=H-mt-mb;
+    var maxV=Math.max(1,st.p.safety), i;
+    for(i=0;i<N;i++){ if(rows[i].end>maxV) maxV=rows[i].end; if(rows[i].begin>maxV) maxV=rows[i].begin; }
+    maxV*=1.08;
+    var step=niceStep(maxV/4), yMax=step*Math.ceil(maxV/step);
+    var X=function(i){return ml+(N<=1?pw/2:i*pw/(N-1));};
+    var Y=function(v){return mt+ph-(v/yMax)*ph;};
+    var svg=mk('svg',{viewBox:'0 0 '+W+' '+H,width:W,height:H,role:'group',tabindex:'0','aria-label':'일별 기말 재고와 안전재고 추이 차트. 방향키로 일차를 옮기면 값이 표시됩니다. 같은 값이 아래 표에 있습니다.'},null);
+    // grid + y ticks
+    for(var v=0;v<=yMax+1e-9;v+=step){
+      var y=Y(v);
+      mk('line',{x1:ml,x2:W-mr,y1:y,y2:y,'class':v===0?'g-base':'g-grid'},svg);
+      var t=mk('text',{x:ml-8,y:y+4,'text-anchor':'end','class':'tick'},svg); t.textContent=v.toLocaleString('ko-KR');
+    }
+    // x ticks
+    var per=N>1?pw/(N-1):pw, want=Math.ceil(34/per), cands=[1,2,3,5,7,10,14], k=cands.find(function(c){return c>=want})||14;
+    for(i=0;i<N;i+=k){
+      var tx=mk('text',{x:X(i),y:H-mb+20,'text-anchor':'middle','class':'tick'},svg); tx.textContent=(i+1);
+    }
+    // safety line + direct label
+    var ys=Y(st.p.safety);
+    mk('line',{x1:ml,x2:W-mr,y1:ys,y2:ys,'class':'l2'},svg);
+    var slText='안전재고 '+fmt(st.p.safety)+'개', slW=slText.length*11.5;
+    var hitsBand=function(x0,x1,b0,b1){
+      for(var j=0;j<N-1;j++){
+        var xa=X(j), xb=X(j+1); if(xb<x0||xa>x1) continue;
+        var ya=Y(rows[j].end), yb=Y(rows[j+1].end), lo=Math.min(ya,yb), hi=Math.max(ya,yb);
+        if(hi>=b0&&lo<=b1) return true;
+      }
+      return false;
+    };
+    var opts=[
+      {x:ml+6,anchor:'start',y:ys-7,b0:ys-22,b1:ys+2},
+      {x:W-mr-6,anchor:'end',y:ys-7,b0:ys-22,b1:ys+2},
+      {x:ml+6,anchor:'start',y:ys+17,b0:ys-2,b1:ys+22},
+      {x:W-mr-6,anchor:'end',y:ys+17,b0:ys-2,b1:ys+22}
+    ];
+    var pickOpt=null;
+    for(var oi=0;oi<opts.length;oi++){
+      var o=opts[oi], x0=(o.anchor==='start')?o.x:o.x-slW, x1=(o.anchor==='start')?o.x+slW:o.x;
+      if(!hitsBand(x0-4,x1+4,o.b0,o.b1)){pickOpt=o;break;}
+    }
+    if(pickOpt){
+      var sl=mk('text',{x:pickOpt.x,y:pickOpt.y,'text-anchor':pickOpt.anchor,'class':'lab2'},svg); sl.textContent=slText;
+    }
+    // area + line
+    var pts=rows.map(function(r,i){return X(i)+','+Y(r.end)}).join(' L');
+    mk('path',{d:'M'+X(0)+','+Y(0)+' L'+pts+' L'+X(N-1)+','+Y(0)+' Z','class':'a1'},svg);
+    mk('path',{d:'M'+pts,'class':'l1'},svg);
+    // end dot, then stockout markers on top so a stockout on the last day stays visible
+    mk('circle',{cx:X(N-1),cy:Y(rows[N-1].end),r:4,'class':'dot1'},svg);
+    rows.forEach(function(r,i){
+      if(r.lack>0){var cx=X(i),cy=Y(r.end),s=6;mk('path',{d:'M'+cx+','+(cy-s)+' L'+(cx+s)+','+cy+' L'+cx+','+(cy+s)+' L'+(cx-s)+','+cy+' Z','class':'stk'},svg);}
+    });
+    // crosshair group
+    var g=mk('g',{id:'xh',visibility:'hidden'},svg);
+    mk('line',{id:'xhl',y1:mt,y2:mt+ph,'class':'cross'},g);
+    mk('circle',{id:'xhd',r:4,'class':'dot1'},g);
+    // overlay
+    var ov=mk('rect',{x:ml-10,y:mt,width:pw+20,height:ph+10,fill:'transparent'},svg);
+    geo={X:X,Y:Y,W:W,ml:ml,pw:pw,N:N,mt:mt,ph:ph};
+    var pick=function(ev){
+      var r=svg.getBoundingClientRect(), px=(ev.clientX-r.left)*(W/r.width);
+      var idx=N<=1?0:Math.round((px-ml)/(pw/(N-1)));
+      setSel(Math.max(0,Math.min(N-1,idx)));
+    };
+    ov.addEventListener('pointermove',pick);
+    ov.addEventListener('pointerdown',pick);
+    ov.addEventListener('pointerleave',function(ev){if(ev.pointerType==='mouse') setSel(null);});
+    svg.addEventListener('keydown',function(ev){
+      if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){
+        ev.preventDefault();
+        var cur=(st.sel===null)?(ev.key==='ArrowRight'?-1:N):st.sel;
+        setSel(Math.max(0,Math.min(N-1,cur+(ev.key==='ArrowRight'?1:-1))));
+      }else if(ev.key==='Escape'){setSel(null);}
+    });
+    svg.addEventListener('blur',function(){setSel(null);});
+    box.insertBefore(svg,box.firstChild);
+    if(hadFocus) svg.focus({preventScroll:true});
+    setSel(keepSel!==null&&keepSel<N?keepSel:null);
+  }
+  function tipRow(parent,label,val,keyHtml){
+    var r=document.createElement('div'); r.className='r';
+    var n=document.createElement('span'); n.className='n';
+    if(keyHtml==='s1'||keyHtml==='s2'){var k=document.createElement('i'); k.className='kk'; k.style.borderColor=(keyHtml==='s1')?'var(--s1)':'var(--s2)'; n.appendChild(k);}
+    else if(keyHtml==='crit'){var dd=document.createElement('i'); dd.className='dd'; n.appendChild(dd);}
+    else{var sp=document.createElement('i'); sp.className='sp'; n.appendChild(sp);}
+    n.appendChild(document.createTextNode(label));
+    var b=document.createElement('b'); b.textContent=val;
+    r.appendChild(n); r.appendChild(b); parent.appendChild(r);
+  }
+  function setSel(i){
+    st.sel=i;
+    var tip=$('tip'), g=document.getElementById('xh');
+    if(!g||!geo) return;
+    if(i===null){g.setAttribute('visibility','hidden'); tip.hidden=true; return;}
+    var r=st.sim.rows[i], x=geo.X(i);
+    g.setAttribute('visibility','visible');
+    var l=document.getElementById('xhl'); l.setAttribute('x1',x); l.setAttribute('x2',x);
+    var d=document.getElementById('xhd'); d.setAttribute('cx',x); d.setAttribute('cy',geo.Y(r.end));
+    tip.textContent='';
+    var t=document.createElement('div'); t.className='t'; t.textContent=r.day+'일차 ('+DOW[(st.p.start+i)%7]+')'; tip.appendChild(t);
+    tipRow(tip,'기말 재고',fmt(r.end)+'개','s1');
+    tipRow(tip,'안전재고',fmt(st.p.safety)+'개','s2');
+    tipRow(tip,'수요',fmt(r.demand)+'개');
+    if(r.receipt>0) tipRow(tip,'입고',fmt(r.receipt)+'개');
+    if(r.order>0) tipRow(tip,'발주',fmt(r.order)+'개');
+    if(r.lack>0) tipRow(tip,'부족',fmt(r.lack)+'개','crit');
+    tip.hidden=false;
+    var bw=$('chartbox').clientWidth, tw=tip.offsetWidth, left=x+14;
+    if(left+tw>bw) left=x-14-tw;
+    tip.style.left=Math.max(0,left)+'px';
+  }
+
+  function updateStatus(){
+    $('status').textContent='수요: '+(st.demandEdited?'직접 수정함':'예시 자동 생성')+' · 발주: '+(st.ordersEdited?'직접 수정함':'재주문점 정책 자동');
+  }
+  function refresh(){
+    st.sim=simulate(st.p,st.demand,st.orders);
+    $('lg-safety').textContent='안전재고 '+fmt(st.p.safety)+'개';
+    syncInputs(); fillRows(st.sim); renderTiles(st.sim); renderChart(); updateStatus();
+  }
+
+  /* ---------- events ---------- */
+  ['f-N','f-start','f-mean','f-vari','f-init','f-L','f-ss','f-S','f-h','f-wk'].forEach(function(id){
+    var el=$(id);
+    el.addEventListener(el.type==='checkbox'||el.tagName==='SELECT'?'change':'input',recompute);
+  });
+  $('b-demand').addEventListener('click',function(){st.seed++; st.demandEdited=false; readParams(); fitArrays(); genDemand(); if(!st.ordersEdited) applyPolicy(); buildTable(); refresh();});
+  $('b-policy').addEventListener('click',function(){st.ordersEdited=false; readParams(); applyPolicy(); buildTable(); refresh();});
+  $('b-clear').addEventListener('click',function(){st.ordersEdited=true; st.orders=new Array(st.p.N).fill(0); buildTable(); refresh();});
+  $('b-reset').addEventListener('click',function(){
+    st.p=Object.assign({},DEFAULTS); st.seed=20; st.demandEdited=false; st.ordersEdited=false; st.sel=null;
+    writeParams(); recompute();
+  });
+  var rt=null;
+  if(window.ResizeObserver){new ResizeObserver(function(){clearTimeout(rt); rt=setTimeout(function(){if(st.sim) renderChart();},60);}).observe($('chartbox'));}
+
+  writeParams(); recompute();
+})();
+</script>
+</body>
+</html>

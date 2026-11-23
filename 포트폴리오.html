@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>김진경 | 포트폴리오</title>
+<meta name="description" content="명지대학교 산업경영공학과 김진경의 포트폴리오. 생산 최적화, 데이터 분석, NLP 프로젝트.">
+<meta name="theme-color" content="#f7f6f2">
+<meta property="og:type" content="website">
+<meta property="og:title" content="김진경 | 포트폴리오">
+<meta property="og:description" content="데이터로 불량과 비효율을 찾아내는 산업경영공학도의 프로젝트 모음">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f4fd8'/%3E%3Ctext x='16' y='23' font-size='19' font-weight='700' text-anchor='middle' fill='white' font-family='sans-serif'%3EJ%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f7f6f2; --card:#ffffff; --ink:#1b1f24; --muted:#5d6670; --line:#e3e1da;
+    --accent:#1f4fd8; --accent-soft:#e8eefc;
+    --radius:16px;
+    --ease-out:cubic-bezier(0.23,1,0.32,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Noto Sans KR',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;-webkit-text-size-adjust:100%;word-break:keep-all;overflow-wrap:break-word}
+  a{color:inherit}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
+
+  /* nav */
+  nav{position:sticky;top:0;z-index:10;background:rgba(247,246,242,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
+  nav .logo{display:inline-flex;align-items:center;min-height:44px;font-weight:900;text-decoration:none;letter-spacing:-.02em}
+  nav ul{display:flex;gap:18px;list-style:none;font-size:14px}
+  nav a.link{display:inline-flex;align-items:center;min-height:44px;text-decoration:none;color:var(--muted);background:linear-gradient(var(--accent),var(--accent)) left bottom 9px/0 2px no-repeat;transition:color 160ms ease,background-size 200ms var(--ease-out)}
+  @media (hover:hover) and (pointer:fine){
+    nav a.link:hover{color:var(--accent);background-size:100% 2px}
+  }
+
+  /* hero */
+  .hero{padding:72px 0 56px}
+  .eyebrow{display:inline-block;font-size:13px;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:4px 12px;border-radius:999px;margin-bottom:20px}
+  h1{font-size:clamp(32px,7vw,56px);line-height:1.2;font-weight:900;letter-spacing:-.03em}
+  h1 em{font-style:normal;color:var(--accent)}
+  .hero p.lead{margin-top:20px;font-size:clamp(16px,2.4vw,19px);color:var(--muted);max-width:620px}
+  .cta{margin-top:28px;display:flex;gap:10px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;min-height:44px;padding:0 22px;border-radius:999px;font-weight:700;font-size:15px;text-decoration:none;border:1.5px solid var(--ink);transition:transform 160ms var(--ease-out),background-color 160ms ease,color 160ms ease,border-color 160ms ease}
+  .btn.primary{background:var(--ink);color:#fff}
+  @media (hover:hover) and (pointer:fine){
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary:hover{background:var(--accent);border-color:var(--accent)}
+    .btn:not(.primary):hover{background:var(--ink);color:#fff}
+  }
+  .btn:active{transform:scale(.97)}
+
+  /* focus, skip link */
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+  .skip{position:absolute;left:12px;top:-64px;background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;z-index:20;text-decoration:none}
+  .skip:focus{top:8px}
+
+  /* hero entrance: once on load, short stagger */
+  .hero .wrap > *{animation:rise 420ms var(--ease-out) both}
+  .hero .wrap > *:nth-child(2){animation-delay:60ms}
+  .hero .wrap > *:nth-child(3){animation-delay:120ms}
+  .hero .wrap > *:nth-child(4){animation-delay:180ms}
+  .hero .wrap > *:nth-child(5){animation-delay:240ms}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}}
+  @keyframes fade{from{opacity:0}}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .hero .wrap > *{animation:fade 200ms ease both;animation-delay:0ms !important}
+    .btn,nav a.link{transition:none}
+  }
+
+  /* hero facts */
+  .stats{margin-top:40px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:620px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .stat b{display:block;font-size:clamp(18px,3.6vw,24px);font-weight:900;letter-spacing:-.02em;line-height:1.25}
+  .stat span{display:block;font-size:13px;color:var(--muted);line-height:1.5;margin-top:2px}
+  section{scroll-margin-top:56px}
+  .contact-list a{color:#fff;text-decoration:none;background:linear-gradient(#fff,#fff) left bottom/100% 1px no-repeat;padding-bottom:1px}
+
+  /* sections */
+  section{padding:56px 0;border-top:1px solid var(--line)}
+  h2{font-size:clamp(22px,4vw,30px);font-weight:900;letter-spacing:-.02em;margin-bottom:6px}
+  .sub{color:var(--muted);margin-bottom:28px;font-size:15px}
+
+  /* about */
+  .about{display:grid;grid-template-columns:1.4fr 1fr;gap:28px}
+  .about p+p{margin-top:12px}
+  .facts{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;list-style:none;font-size:15px}
+  .facts li{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .facts li:last-child{border-bottom:0}
+  .facts span:first-child{color:var(--muted)}
+  .facts span:last-child{font-weight:500;text-align:right}
+
+  /* projects */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;display:flex;flex-direction:column}
+  .card.wide{grid-column:1 / -1}
+  .tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .tag{font-size:12px;font-weight:500;padding:3px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+  .tag.gray{background:#efede7;color:var(--muted)}
+  .card h3{font-size:19px;line-height:1.4;letter-spacing:-.01em;margin-bottom:4px}
+  .card .meta{font-size:13px;color:var(--muted);margin-bottom:14px}
+  .steps{list-style:none;font-size:14.5px}
+  .steps li{display:grid;grid-template-columns:56px 1fr;gap:8px;padding:6px 0}
+  .finds span{display:block;padding:1px 0}
+  .steps b{color:var(--accent);font-weight:700}
+  .todo-inline{color:#a15c00;background:#fff4de;border-radius:6px;padding:0 6px}
+  .result{margin-top:14px;padding:12px 14px;border-radius:12px;background:#f3f2ed;font-size:14.5px;font-weight:500}
+
+  /* skills */
+  .skills{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .skill{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .skill h3{font-size:16px;margin-bottom:10px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-size:13px;padding:4px 11px;border-radius:999px;border:1px solid var(--line);background:#fbfaf7}
+
+  /* timeline */
+  .tl{list-style:none;border-left:2px solid var(--line);margin-left:6px}
+  .tl li{position:relative;padding:0 0 22px 22px}
+  .tl li::before{content:"";position:absolute;left:-7px;top:8px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
+  .tl .when{font-size:13px;color:var(--muted)}
+  .tl .what{font-weight:700}
+  .tl .note{font-size:14.5px;color:var(--muted)}
+
+  /* contact */
+  .contact-box{background:var(--ink);color:#fff;border-radius:24px;padding:36px 28px}
+  .contact-box h2{color:#fff}
+  .contact-box p{color:#c9ced4}
+  .contact-list{margin-top:18px;list-style:none;display:grid;gap:8px;font-size:15px}
+  .contact-list span.k{display:inline-block;width:76px;color:#9aa3ad}
+  .todo{background:rgba(255,255,255,.12);padding:1px 8px;border-radius:6px}
+
+  footer{padding:28px 0 48px;font-size:13px;color:var(--muted);text-align:center}
+
+  @media (max-width:760px){
+    nav ul{gap:12px;font-size:13px}
+    .about,.grid,.skills{grid-template-columns:1fr !important}
+    .stats{grid-template-columns:1fr;gap:8px}
+    .stat{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 16px}
+    .stat span{margin-top:0;text-align:right}
+    .hero{padding:48px 0 40px}
+    section{padding:44px 0}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#about">본문으로 건너뛰기</a>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#top">김진경</a>
+    <ul>
+      <li><a class="link" href="#about">소개</a></li>
+      <li><a class="link" href="#projects">프로젝트</a></li>
+      <li><a class="link" href="#skills">역량</a></li>
+      <li><a class="link" href="#contact">연락</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <span class="eyebrow">명지대학교 산업경영공학과</span>
+    <h1>데이터로 <em>불량과 비효율</em>을<br>찾아내는 산업경영공학도</h1>
+    <p class="lead">생산·품질 현장의 문제를 데이터 분석과 최적화로 풀어 왔습니다. 자동차 제조 분야의 품질관리·생산관리 직무를 목표로 준비하고 있습니다.</p>
+    <div class="cta">
+      <a class="btn primary" href="#projects">프로젝트 보기</a>
+      <a class="btn" href="#contact">연락하기</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>4.06 / 4.5</b><span>학점</span></div>
+      <div class="stat"><b>품질경영기사</b><span>취득</span></div>
+      <div class="stat"><b>138위</b><span>OGC 2026, 코드 제출 약 400팀 중</span></div>
+    </div>
+  </div>
+</header>
+
+<main>
+<section id="about">
+  <div class="wrap">
+    <h2>소개</h2>
+    <p class="sub">무엇을 공부했고, 어디로 가고 싶은지</p>
+    <div class="about">
+      <div>
+        <p>산업경영공학을 전공하며 <b>생산 최적화</b>, <b>데이터 분석</b>, <b>텍스트 분석(NLP)</b>을 중심으로 프로젝트를 쌓아 왔습니다. Business Intelligence 연구실에서 학부연구생으로 활동하며, 경진대회와 학회 발표를 통해 문제를 정의하고, 방법을 비교하고, 결과로 검증하는 과정을 반복해 왔습니다.</p>
+        <p>현장 데이터에서 원인을 찾아 개선으로 연결하는 품질관리·생산관리 엔지니어가 되는 것이 목표입니다.</p>
+      </div>
+      <ul class="facts">
+        <li><span>학교</span><span>명지대학교</span></li>
+        <li><span>전공</span><span>산업경영공학과</span></li>
+        <li><span>학년</span><span>3학년 수료</span></li>
+        <li><span>학점</span><span>4.06 / 4.5</span></li>
+        <li><span>관심 직무</span><span>품질관리 · 생산관리</span></li>
+        <li><span>관심 분야</span><span>자동차 제조</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="wrap">
+    <h2>프로젝트</h2>
+    <p class="sub">문제 → 방법 → 결과 순서로 정리했습니다</p>
+    <div class="grid">
+
+      <article class="card wide">
+        <div class="tag-row"><span class="tag">제조 데이터 분석</span><span class="tag">불량 예측</span><span class="tag gray">경진대회</span></div>
+        <h3>사출성형 품질불량 사전예측 및 검사 우선순위</h3>
+        <p class="meta">제6회 K-인공지능 제조데이터 분석 경진대회 (KAMP) · 3인 팀 · 데이터 전처리·검증 담당</p>
+        <ul class="steps">
+          <li><b>문제</b><span>사출성형 공정 데이터로 최종검사 전에 불량을 예측하고, 검사 우선순위를 정하는 과제 (CN7·RG3 두 금형 데이터)</span></li>
+          <li><b>역할</b><span>데이터 진단, 전처리, 검증 설계, 팀 공용 데이터 구성, 보고서 작성</span></li>
+          <li><b>방법</b><span>2캐비티(LH/RH) 쌍 구조를 샷 단위로 병합 → 인접 샷 블록 그룹 교차검증 → 다중비교 보정 순열검정으로 신호 유무 판정 → 급변 경보와 캐비티별 검사 규칙으로 검사 우선순위 설계</span></li>
+          <li><b>발견</b><span class="finds"><span>① 불량 신호는 우측(RH) 캐비티에 집중</span><span>② 검증 방식에 따라 성능이 과대평가되는 누수 요인을 분해</span><span>③ 높게 나온 초기 성능이 샷 단위 신호가 아니라 시기 구분 효과임을 확인하고 결론을 정정</span><span>④ 파일별로 따로 표준화된 데이터를 직접 비교하면 생기는 착시를 발견 (표준편차 약 78배 차이)</span></span></li>
+        </ul>
+        <p class="result">성능 수치보다 검증의 정직성에 초점: 스스로의 오류까지 외부 자료로 교정하며 결론을 단계적으로 수정</p>
+      </article>
+
+      <article class="card">
+        <div class="tag-row"><span class="tag">최적화</span><span class="tag">스케줄링</span><span class="tag gray">경진대회</span></div>
+        <h3>조선소 블록 스케줄링·배치 최적화</h3>
+        <p class="meta">OGC 2026 · 코드 제출 약 400팀 중 138위</p>
+        <ul class="steps">
+          <li><b>문제</b><span>블록 일정과 2차원 배치를 동시에 만족하는 해 찾기</span></li>
+          <li><b>방법</b><span>휴리스틱 초기해 → 면적 제약 위반 원인 진단 → LNS와 ILS A/B 비교(ILS 우세) → MIP 한계 확인 후 CP-SAT 전환</span></li>
+          <li><b>안전장치</b><span>시간 초과 방지를 위한 실행 시간 가드와 탐색 단계 시간 상한 설정</span></li>
+        </ul>
+        <p class="result">대안을 실험으로 비교해 접근법을 바꿔 가며 해를 개선</p>
+      </article>
+
+      <article class="card">
+        <div class="tag-row"><span class="tag">NLP</span><span class="tag">품질 관점 분석</span><span class="tag gray">학회 포스터</span></div>
+        <h3>HMR 소비자 리뷰 분석</h3>
+        <p class="meta">2026 대한산업공학회 춘계공동학술대회 · 포스터 발표</p>
+        <ul class="steps">
+          <li><b>문제</b><span>소비자 리뷰에서 품질 문제를 공정 단계와 연결해 찾기</span></li>
+          <li><b>방법</b><span>LDA 토픽 모델링, KoELECTRA 기반 속성 감성 분석(ABSA), SCOR 변형 공정 매핑(제조·포장·배송), FMEA 기반 우선순위 점수</span></li>
+        </ul>
+        <p class="result">리뷰 텍스트를 개선 우선순위로 이어 주는 분석 흐름 구성</p>
+      </article>
+
+      <article class="card">
+        <div class="tag-row"><span class="tag">수요예측</span><span class="tag">재고관리</span><span class="tag gray">경진대회</span></div>
+        <h3>수요예측 기반 자재 주문·재고관리</h3>
+        <p class="meta">IOG 경진대회 · 4인 팀 · 장려상</p>
+        <ul class="steps">
+          <li><b>문제</b><span>주가 흐름 기반 수요를 예측해 스톡아웃 없이 자재를 주문하는 것</span></li>
+          <li><b>방법</b><span>N-BEATS·XGBoost 예측 + 뉴스 크롤링 이진 분류와 TreeSHAP 해석으로 정성 보정, EOQ 기본 주문량, 하루치 안전재고, 생산량 입력 시 재고와 스톡아웃 시점이 자동 표시되는 엑셀 재고관리표</span></li>
+          <li><b>교훈</b><span>초반 입력 실수로 스톡아웃 1회 → 매일 실제 재고와 대조하는 검증 루틴 도입</span></li>
+        </ul>
+        <p class="result">이후 대회 종료까지 스톡아웃 0회 유지, 중반 이후 순위 상승</p>
+      </article>
+
+      <article class="card">
+        <div class="tag-row"><span class="tag">머신러닝</span><span class="tag gray">공공 데이터</span></div>
+        <h3>서울시 구별 범죄 예측</h3>
+        <p class="meta">회귀·분류 모델 비교</p>
+        <ul class="steps">
+          <li><b>방법</b><span>로지스틱 회귀, K-NN, SVM, 랜덤 포레스트 비교</span></li>
+          <li><b>결과</b><span>R² = 0.85</span></li>
+        </ul>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<section id="skills">
+  <div class="wrap">
+    <h2>역량</h2>
+    <p class="sub">프로젝트에서 실제로 사용한 것 위주로 정리했습니다</p>
+    <div class="skills">
+      <div class="skill">
+        <h3>데이터 분석 · ML</h3>
+        <div class="chips"><span class="chip">Python</span><span class="chip">R</span><span class="chip">회귀·분류</span><span class="chip">랜덤 포레스트</span><span class="chip">SVM</span><span class="chip">K-NN</span><span class="chip">XGBoost</span><span class="chip">N-BEATS</span><span class="chip">TreeSHAP</span></div>
+      </div>
+      <div class="skill">
+        <h3>NLP</h3>
+        <div class="chips"><span class="chip">LDA</span><span class="chip">KoELECTRA</span><span class="chip">ABSA</span></div>
+      </div>
+      <div class="skill">
+        <h3>최적화</h3>
+        <div class="chips"><span class="chip">OR-Tools CP-SAT</span><span class="chip">MIP</span><span class="chip">LNS / ILS</span><span class="chip">휴리스틱</span></div>
+      </div>
+      <div class="skill">
+        <h3>품질 · 생산관리</h3>
+        <div class="chips"><span class="chip">FMEA</span><span class="chip">SCOR</span><span class="chip">수요예측</span><span class="chip">재고관리</span><span class="chip">EOQ·안전재고</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="path">
+  <div class="wrap">
+    <h2>자격 · 활동</h2>
+    <p class="sub">취득한 자격과 연구·발표 경험</p>
+    <div class="skills" style="grid-template-columns:repeat(2,1fr)">
+      <div class="skill">
+        <h3>보유 자격증</h3>
+        <div class="chips"><span class="chip">품질경영기사</span><span class="chip">토익스피킹 AL</span><span class="chip">컴퓨터활용능력 2급</span><span class="chip">ADsP</span></div>
+      </div>
+      <div class="skill">
+        <h3>준비 중</h3>
+        <div class="chips"><span class="chip">SQLD (결과 대기)</span><span class="chip">Six Sigma Green Belt</span><span class="chip">ERP / SAP</span></div>
+      </div>
+    </div>
+    <ul class="tl" style="margin-top:28px">
+      <li><div class="what">Business Intelligence 연구실 학부연구생</div><div class="note">1학기 진행 중</div></li>
+      <li><div class="what">2026 대한산업공학회 춘계공동학술대회</div><div class="note">HMR 소비자 리뷰 분석 포스터 발표</div></li>
+    </ul>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <div class="contact-box">
+      <h2>연락</h2>
+      <p>프로젝트나 직무에 대해 이야기 나누고 싶으시면 편하게 연락 주세요.</p>
+      <ul class="contact-list">
+        <li><span class="k">이메일</span><a href="mailto:jinkyoung.041214@gmail.com">jinkyoung.041214@gmail.com</a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>© 2026 김진경</footer>
+
+</body>
+</html>

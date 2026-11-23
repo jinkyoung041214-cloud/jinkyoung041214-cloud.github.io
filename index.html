@@ -106,7 +106,8 @@
   .steps li{display:grid;grid-template-columns:56px 1fr;gap:8px;padding:6px 0}
   .finds span{display:block;padding:1px 0}
   .steps b{color:var(--accent);font-weight:700}
-  .todo-inline{color:#a15c00;background:#fff4de;border-radius:6px;padding:0 6px}
+  .card-link{margin-top:14px;display:inline-flex;align-items:center;min-height:44px;font-weight:700;font-size:14.5px;color:var(--accent);text-decoration:none;background:linear-gradient(var(--accent),var(--accent)) left bottom 9px/0 2px no-repeat;transition:background-size 200ms var(--ease-out)}
+  @media (hover:hover) and (pointer:fine){.card-link:hover{background-size:100% 2px}}
   .result{margin-top:14px;padding:12px 14px;border-radius:12px;background:#f3f2ed;font-size:14.5px;font-weight:500}
 
   /* skills */
@@ -251,6 +252,7 @@
           <li><b>교훈</b><span>초반 입력 실수로 스톡아웃 1회 → 매일 실제 재고와 대조하는 검증 루틴 도입</span></li>
         </ul>
         <p class="result">이후 대회 종료까지 스톡아웃 0회 유지, 중반 이후 순위 상승</p>
+        <a class="card-link" href="inventory.html">재고·주문 시뮬레이터 직접 써 보기 →</a>
       </article>
 
       <article class="card">
